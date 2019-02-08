@@ -133,4 +133,8 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
   done
 done
 
+ui_print " "
+ui_print "- Conversion Completed! Enjoy!"
+ui_print " "
+
 exit 0
