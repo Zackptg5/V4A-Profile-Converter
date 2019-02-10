@@ -116,7 +116,7 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
           # Change speaker entry names
           [ "$DEVICE" == "speaker" -a "$LINE" == "speaker_enable" ] && LINE=enable
           # Change vse value
-          [ "LINE" == "vse_value" ] && { VALUE="$(echo $VALUE | sed "s/;.*//")"; VALUE=$(awk -v VALUE=$VALUE 'BEGIN{VALUE=(VALUE/5.6); print VALUE;}'); }
+          [ "$LINE" == "vse_value" ] && { VALUE="$(echo $VALUE | sed "s/;.*//")"; VALUE=$(awk -v VALUE=$VALUE 'BEGIN{VALUE=(VALUE/5.6); print VALUE;}'); }
         fi
         # Change names
         case "$LINE" in
