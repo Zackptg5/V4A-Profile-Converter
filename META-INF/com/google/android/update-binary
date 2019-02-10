@@ -106,6 +106,7 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
           [ "$DEVICE" == "speaker" ]&& { case "$LINE" in
                                            convolver*|fet*|fireq*|limiter|outvol|playback*|reverb*) LINE="speaker_$LINE";;
                                          esac; }
+          [ "$LINE" == "dynamicsystem_bass" ] && VALUE=$((VALUE * 20 + 100))
         else
           case "$LINE" in
             [A-Z-a-z.]*) VALUE="$(echo "$LINE" | sed -e "s|^.*=||" -e "s/FILE://")"; LINE="$(echo "$LINE" | sed -e "s|=.*$||" -e "s/viperddc/ddc/" -e "s/\./_/g")";;
