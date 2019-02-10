@@ -111,6 +111,10 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
             [A-Z-a-z.]*) VALUE="$(echo "$LINE" | sed -e "s|^.*=||" -e "s/FILE://")"; LINE="$(echo "$LINE" | sed -e "s|=.*$||" -e "s/viperddc/ddc/" -e "s/\./_/g")";;
             *) continue;;
           esac
+          [ "$DEVICE" == "speaker" ]&& { case "$LINE" in
+                                 speaker_enable) LINE=enable;;
+                               esac; }
+
         fi
         # Change names
         case "$LINE" in
