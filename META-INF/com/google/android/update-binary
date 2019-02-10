@@ -159,7 +159,12 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
 done
 
 ui_print " "
-ui_print "- Conversion Completed! Enjoy!"
+ui_print "- Conversion Completed!"
+ui_print " "
+ui_print "  If in magisk manager, you need to reboot"
+ui_print "   or force close V4A to use the new presets"
+ui_print " "
+ui_print "  Enjoy!"
 ui_print " "
 
 exit 0
