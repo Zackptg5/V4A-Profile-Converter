@@ -69,6 +69,8 @@ fi
 [ -d $FOL ] || { ui_print "ViPER4Android folder not found! Aborting!"; exit 1; }
 ui_print "- ViPER4Android folder detected at: $FOL!"
 ui_print " "
+ui_print "  If new preset already exists, it will be skipped"
+ui_print " "
 [ "$(ls -A $FOL/Profile 2>/dev/null)" ] || { ui_print "No profiles detected!"; exit 1; }
 mkdir $FOL/Preset 2>/dev/null
 . $INSTALLER/Keys.sh
@@ -89,8 +91,7 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
       else
         SOURCE="$PROFILE/$DEVICE.txt"
       fi
-      [ -f "$SOURCE" ] || continue
-      [ -d "$(dirname "$DEST")" ] && { ui_print "   New preset $(basename $(dirname "$DEST")) already exists!"; ui_print "   Backing up to: $(basename $(dirname "$DEST"))-old"; ui_print "    if it doesn't already exist (won't be overwritten)"; mv -n "$(dirname "$DEST")" "$(dirname "$DEST")-old"; }
+      [ ! -f "$SOURCE" -o -d "$(dirname "$DEST")" ] && continue
       [ "$FORMAT" == "xml" ] && ui_print "   Creating new $DEVICE-legacy profile..." || ui_print "   Creating new $DEVICE profile..."
       mkdir "$(dirname "$DEST")" 2>/dev/null
       cp -f $INSTALLER/Blanks/$(basename "$DEST") "$DEST"
