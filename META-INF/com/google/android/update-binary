@@ -122,7 +122,7 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
         # Change names
         case "$LINE" in
           *fireq) continue;;
-          *fireq_custom) LINE=fireq;;
+          *fireq_custom) LINE="$(echo $LINE | sed "s/_custom//")";;
           dynamicsystem_coeffs) LINE=dynamicsystem_device;;
           dynamicsystem_bass) LINE=dynamicsystem_strength;;
           tube_enable) LINE=tube_simulator_enable;;
