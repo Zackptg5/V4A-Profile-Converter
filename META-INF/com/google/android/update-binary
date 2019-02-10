@@ -95,22 +95,41 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
       mkdir "$(dirname "$DEST")" 2>/dev/null
       cp -f $INSTALLER/Blanks/$(basename "$DEST") "$DEST"
       while read LINE; do
+        [ "$(echo "$LINE" | grep 'ddcblock')" ] && continue # Skip ddcblock lines - not used and just slow down script
         if [ "$FORMAT" == "xml" ]; then
           case "$LINE" in
-            *"string name="*) VALUE="$(echo $LINE | sed -r -e "s|.*>(.*)</.*|\1|" -e "s/FILE://")"; LINE="$(echo $LINE | sed -r -e "s|.*name=\"viper4android.[A-Za-z]*\.(.*)\".*|\1|" -e "s/viperddc/ddc/" -e "s/\./_/g")";;
-            *"boolean name="*) VALUE="$(echo $LINE | sed -r "s|.*value=\"(.*)\" />.*|\1|")"; LINE="$(echo $LINE | sed -r -e "s|.*name=\"viper4android.[A-Za-z]*\.(.*)\" v.*|\1|" -e "s/viperddc/ddc/" -e "s/\./_/g")";;
+            *"string name="*) VALUE="$(echo "$LINE" | sed -r -e "s|.*>(.*)</.*|\1|" -e "s/FILE://")"; LINE="$(echo "$LINE" | sed -r -e "s|.*name=\"viper4android.[A-Za-z]*\.(.*)\".*|\1|" -e "s/viperddc/ddc/" -e "s/\./_/g")";;
+            *"boolean name="*) VALUE="$(echo "$LINE" | sed -r "s|.*value=\"(.*)\" />.*|\1|")"; LINE="$(echo "$LINE" | sed -r -e "s|.*name=\"viper4android.[A-Za-z]*\.(.*)\" v.*|\1|" -e "s/viperddc/ddc/" -e "s/\./_/g")";;
             *) continue;;
           esac
+          # Change speaker entry names
+          [ "$DEVICE" == "speaker" ]&& { case "$LINE" in
+                                           convolver*|fet*|fireq*|limiter|outvol|playback*|reverb*) LINE="speaker_$LINE";;
+                                         esac; }
         else
           case "$LINE" in
-            [A-Z-a-z.]*) VALUE="$(echo $LINE | sed -e "s|^.*=||" -e "s/FILE://")"; LINE="$(echo $LINE | sed -e "s|=.*$||" -e "s/viperddc/ddc/" -e "s/\./_/g")";;
+            [A-Z-a-z.]*) VALUE="$(echo "$LINE" | sed -e "s|^.*=||" -e "s/FILE://")"; LINE="$(echo "$LINE" | sed -e "s|=.*$||" -e "s/viperddc/ddc/" -e "s/\./_/g")";;
             *) continue;;
           esac
         fi
+        # Change names
         case "$LINE" in
-          FILE:*) continue;;
-          fidelity_bass_mode|fidelity_clarity_mode|ddc_device|fireq|convolver_kernel|dynamicsystem_device)
-            [ "$VALUE" == "custom" ] && continue
+          *fireq) continue;;
+          *fireq_custom) LINE=fireq;;
+          dynamicsystem_coeffs) LINE=dynamicsystem_device;;
+          dynamicsystem_bass) LINE=dynamicsystem_strength;;
+          tube_enable) LINE=tube_simulator_enable;;
+          channelpan) LINE=gate_channelpan;;
+          *limiter) LINE=gate_limiter;;
+          *outvol) LINE=gate_outputvolume;;
+          *reverb*) LINE="$(echo $LINE | sed -e "s/reverb_/reverberation_/" -e "s/roomwidth/room_width/")";;
+          *fetcompressor*) LINE="$(echo $LINE | sed "s|fetcompressor_|fet_|")";;
+          vhs_qual) LINE=vhs_quality;;
+          fidelity_bass_freq) LINE=fidelity_bass_frequency;;
+          spkopt_enable|speaker_optimize) LINE=speaker_optimization;;
+        esac
+        case "$LINE" in
+          fidelity_bass_mode|fidelity_clarity_mode|ddc_device|*fireq|*convolver_kernel|dynamicsystem_device)
             VALUE="$(basename "$VALUE")"
             [ "$LINE" == "ddc_device" -o "$LINE" == "convolver_kernel" ] && [ "$VALUE" ] && [ $VALUE -eq $VALUE ] 2>/dev/null && VALUE="$(grep "$VALUE" $INSTALLER/VDCIndex.txt | sed -r "s/^[0-9]*=\"(.*)\"/\1/").vdc"
             LINE="$(eval echo \$$LINE)"
