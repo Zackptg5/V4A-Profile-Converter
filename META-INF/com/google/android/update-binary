@@ -88,8 +88,10 @@ find $FOL/Profile -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read PROFI
       if [ "$FORMAT" == "xml" ]; then
         SOURCE="$PROFILE/com.vipercn.viper4android_v2.$DEVICE.xml"
         DEST="$(echo "$DEST" | sed "s|-$DEVICE|-$DEVICE-Legacy|")"
+        [ "$(head -n1 $SOURCE)" == "<?xml version='1.0' encoding='utf-8' standalone='yes' ?>" ] || { ui_print "   $SOURCE profile bugged! Skipping!"; continue; }
       else
         SOURCE="$PROFILE/$DEVICE.txt"
+        [ "$(head -n1 $SOURCE)" == "<?xml version='1.0' encoding='utf-8' standalone='yes' ?>" ] && { ui_print "   $SOURCE profile bugged! Skipping!"; continue; }
       fi
       [ ! -f "$SOURCE" -o -d "$(dirname "$DEST")" ] && continue
       [ "$FORMAT" == "xml" ] && ui_print "   Creating new $DEVICE-legacy profile..." || ui_print "   Creating new $DEVICE profile..."
