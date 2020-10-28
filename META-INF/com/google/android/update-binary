@@ -113,27 +113,24 @@ convert() {
   if [ "$1" != "-s" ]; then
     ui_print "   Old ViPER4Android folder detected at: $FOL!"
     ui_print "   If new preset already exists, it will be skipped"
-    ui_print "   $FOL/Preset original content"
-    ui_print "    will be moved to: $FOL/Preset-Old"
     ui_print " "
-    cp -rf $FOL/Preset $FOL/Preset-Old
   fi
 
   find $FOL/Preset -mindepth 2 -maxdepth 2 -type f 2>/dev/null | while read PRESET; do
-    [ "$1" != "-s" ] && ui_print "   Converting $(basename "`dirname "$PRESET"`")"
     NEWPRESET="$FOL/Preset/$(basename "`dirname "$PRESET"`")-$(basename "$PRESET")"
     [ -f "$NEWPRESET" ] && continue
+    [ "$1" != "-s" ] && ui_print "   Converting $(basename "`dirname "$PRESET"`")"
     cp -f "$PRESET" "$NEWPRESET"
-    rm -rf "$(dirname "$PRESET")"
 
     # Convert values
     [ "$(basename "$PRESET")" == "speaker.xml" ] && sed -i '\|^</map>$|i    <int name="32775" value="2" />' "$NEWPRESET" || sed -i '\|^</map>$|i    <int name="32775" value="1" />' "$NEWPRESET"
-    local math value
-    for key in 65547 65554 65555 65556 65558 65560 65561 65573 65576 65577 65580; do
+    local math value count
+    for key in 65587 65554 65555 65556 65558 65560 65561 65573 65576 65577 65580 65586 65588 65608 65609 65566 65605 65567 65606 65568 65607; do
+      unset math; count=0
       value=$(sed -n "/int name=\"$key\"/p" "$NEWPRESET" | sed -r "s/.*value=\"([0-9]*)\".*/\1/")
       [ -z $value ] && continue
       case "$key" in
-        65547) math="($value + 100) / 2";; # Limited - channelPan
+        65587) math="($value + 100) / 2";; # Limiter - channelPan
         65554|65555) math="($value - 120) / 10";; # FieldSurround - width, midImage
         65556) math="($value - 200) / 75";; # FieldSurround - depth
         65558) math="$value / 100 - 1";; # DifferentialSurround - strength
@@ -142,7 +139,32 @@ convert() {
         65576) math="$value - 15";; # ViPERBass - cutOffFrequency
         65577) math="($value - 50) / 50";; # ViPERBass - strength
         65580) math="$value / 50";; # ViPERClarity - strength
+        65586|65608)
+          for i in 1 5 10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200; do
+            [ $value -eq $i ] && { math=$count; break; }
+            count=$((count + 1))
+          done
+          ;; # Speaker/Limiter - Output gain, Speaker/Playback gain control - Output threshold
+        65588|65609|65568|65607)
+          for i in 30 50 70 80 90 100; do
+            [ $value -eq $i ] && { math=$count; break; }
+            count=$((count + 1))
+          done
+          ;; # Speaker/Limiter - Threshold limit
+        65566|65605)
+          for i in 50 100 300; do
+            [ $value -eq $i ] && { math=$count; break; }
+            count=$((count + 1))
+          done
+          ;; # Speaker/Playback gain control - Strength
+        65567|65606)
+          for i in 100 200 300 400 500 600 700 800 900 1000 3000; do
+            [ $value -eq $i ] && { math=$count; break; }
+            count=$((count + 1))
+          done
+          ;; # Speaker/Playback gain control - Maximum gain
       esac
+      [ "$math" ] || math=0
       value=$(($math))
       sed -ri "/int name=\"$key\"/ s/(value=\")[0-9]*\"/\1$value\"/" "$NEWPRESET"
     done
@@ -216,16 +238,15 @@ ui_print " "
 # Find ViPER4Android profiles folder
 if $BOOTMODE; then
   FOL=/storage/emulated/0/ViPER4Android
-  [ -d $FOL ] || FOL=$(find /storage -type d -name "ViPER4Android" 2>/dev/null | head -n1)
-  [ -d $FOL ] || FOL=$(find /data/media -type d -name "ViPER4Android" 2>/dev/null | head -n1)
-  [ -d $FOL ] || FOL=$(find /sdcard -type d -name "ViPER4Android" 2>/dev/null | head -n1)
+  [ -d "$FOL" ] || mkdir $FOL
 else
   FOL=/data/media/0/ViPER4Android
-  [ -d $FOL ] || FOL=$(find /data/media -type d -name "ViPER4Android" 2>/dev/null | head -n1)
+  [ -d "$FOL" ] || mkdir $FOL
 fi
-[ -d $FOL ] || { ui_print "ViPER4Android folder not found! Aborting!"; exit 1; }
 NEWFOL="$(dirname $FOL)/Android/data/com.pittvandewitt.viperfx/files"
-[ -d "$NEWFOL" ] && { cp -rf $NEWFOL $FOL/; BAK=true; } || BAK=false
+# Backup existing presets
+[ -d "$NEWFOL" ] && cp -rf $NEWFOL/* $FOL/
+
 ui_print "- ViPER4Android folder detected at: $FOL!"
 ui_print " "
 ui_print "  If new preset already exists, it will be skipped"
@@ -233,12 +254,12 @@ ui_print " "
 
 profile_convert
 
+# Copy to new scoped storage directory
 ui_print " "
 ui_print "- Placing Files to New Directory:"
 ui_print "  $NEWFOL"
 mkdir -p $NEWFOL
 cp -rf $FOL/DDC $FOL/Kernel $FOL/Preset $NEWFOL/
-$BAK && { cp -rf $FOL/files/* $NEWFOL; rm -rf $FOL/files; }
 ui_print " "
 ui_print "   Note that all presets and other files are now in:"
 ui_print "   $NEWFOL"
